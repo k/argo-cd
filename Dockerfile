@@ -103,9 +103,11 @@ RUN groupadd -g 999 argocd && \
     mkdir -p /home/argocd && \
     chown argocd:argocd /home/argocd && \
     apt-get update && \
-    apt-get install -y git && \
+    apt-get install -y git python3-pip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN pip3 install awscli
 
 COPY hack/ssh_known_hosts /etc/ssh/ssh_known_hosts
 COPY hack/git-ask-pass.sh /usr/local/bin/git-ask-pass.sh
@@ -115,6 +117,7 @@ COPY --from=builder /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=builder /usr/local/bin/kustomize1 /usr/local/bin/kustomize1
 COPY --from=builder /usr/local/bin/kustomize /usr/local/bin/kustomize
 COPY --from=builder /usr/local/bin/aws-iam-authenticator /usr/local/bin/aws-iam-authenticator
+
 
 # workaround ksonnet issue https://github.com/ksonnet/ksonnet/issues/298
 ENV USER=argocd
