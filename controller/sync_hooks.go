@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	appv1 "github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/util/health"
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -36,7 +38,7 @@ func enforceHookDeletePolicy(hook *unstructured.Unstructured, operation v1alpha1
 }
 
 // getOperationPhase returns a hook status from an _live_ unstructured object
-func getOperationPhase(hook *unstructured.Unstructured) (operation v1alpha1.OperationPhase, message string) {
+func getOperationPhase(hook *unstructured.Unstructured, resourceOverrides map[string]v1alpha1.ResourceOverride) (operation v1alpha1.OperationPhase, message string) {
 	gvk := hook.GroupVersionKind()
 	if isBatchJob(gvk) {
 		return getStatusFromBatchJob(hook)
@@ -45,7 +47,17 @@ func getOperationPhase(hook *unstructured.Unstructured) (operation v1alpha1.Oper
 	} else if isPod(gvk) {
 		return getStatusFromPod(hook)
 	} else {
-		return v1alpha1.OperationSucceeded, fmt.Sprintf("%s created", hook.GetName())
+		h, err := health.GetResourceHealth(hook, resourceOverrides)
+		if err != nil {
+			return v1alpha1.OperationError, err.Error()
+		}
+		if h == nil || h.Status == appv1.HealthStatusHealthy {
+			return v1alpha1.OperationSucceeded, fmt.Sprintf("%s created", hook.GetName())
+		}
+		if h.Status == appv1.HealthStatusDegraded {
+			return v1alpha1.OperationError, h.Message
+		}
+		return v1alpha1.OperationRunning, fmt.Sprintf("%s running", hook.GetName())
 	}
 }
 
