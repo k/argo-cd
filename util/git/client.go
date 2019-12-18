@@ -125,7 +125,7 @@ func (m *nativeGitClient) Init() error {
 
 // Fetch fetches latest updates from origin
 func (m *nativeGitClient) Fetch() error {
-	_, err := m.runCredentialedCmd("git", "fetch", "origin", "--tags", "--force")
+	_, err := m.runCredentialedCmd("git", "fetch", "origin", "--tags", "--force", "--prune")
 	return err
 }
 
