@@ -13,7 +13,6 @@ import (
 func (sc *syncContext) getOperationPhase(hook *unstructured.Unstructured) (v1alpha1.OperationPhase, string, error) {
 	phase := v1alpha1.OperationSucceeded
 	message := fmt.Sprintf("%s created", hook.GetName())
-
 	resHealth, err := health.GetResourceHealth(hook, sc.resourceOverrides)
 	if err != nil {
 		return "", "", err
