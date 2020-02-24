@@ -246,7 +246,7 @@ func (m *nativeGitClient) IsLFSEnabled() bool {
 
 // Fetch fetches latest updates from origin
 func (m *nativeGitClient) Fetch() error {
-	err := m.runCredentialedCmd("git", "fetch", "origin", "--tags", "--force")
+	err := m.runCredentialedCmd("git", "fetch", "origin", "--tags", "--force", "--prune")
 	// When we have LFS support enabled, check for large files and fetch them too.
 	if err == nil && m.IsLFSEnabled() {
 		largeFiles, err := m.LsLargeFiles()
